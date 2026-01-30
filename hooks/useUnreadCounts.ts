@@ -19,7 +19,18 @@ export function useUnreadCounts() {
 
     try {
       setLoading(true);
-      const response = await fetch('/api/unread-counts');
+      // Build the URL properly for both localhost and remote access
+      const url = typeof window !== 'undefined' 
+        ? `${window.location.origin}/api/unread-counts`
+        : '/api/unread-counts';
+
+      const response = await fetch(url, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         setCounts(data);

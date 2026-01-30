@@ -36,8 +36,10 @@ export function GroupSuggestions({ compact = false }: GroupSuggestionsProps) {
   const fetchGroups = async () => {
     try {
       setLoading(true);
-      // TODO: Fetch from API
-      setGroups([]);
+      const res = await fetch('/api/groups?type=discover');
+      if (!res.ok) throw new Error('Failed to fetch groups');
+      const data = await res.json();
+      setGroups(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching groups:', error);
     } finally {
@@ -77,12 +79,8 @@ export function GroupSuggestions({ compact = false }: GroupSuggestionsProps) {
   }
 
   if (groups.length === 0) {
-    return (
-      <div className="bg-white rounded-2xl p-6 shadow-lg">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Groupes suggérés</h3>
-        <p className="text-gray-500 text-center py-8">Aucun groupe suggéré</p>
-      </div>
-    );
+    // No groups -> do not render
+    return null;
   }
 
   return (

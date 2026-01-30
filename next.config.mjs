@@ -3,6 +3,9 @@ const nextConfig = {
   // Sécurité: Désactiver la révélation du header 'X-Powered-By'
   poweredByHeader: false,
   
+  // Permettre l'accès depuis d'autres appareils sur le réseau local
+  reactStrictMode: true,
+  
   images: {
     domains: ['res.cloudinary.com', 'lh3.googleusercontent.com'],
     remotePatterns: [

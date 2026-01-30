@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { receiverId, content, mediaUrl, mediaType } = body;
+    const { receiverId, content, image, document } = body;
 
     if (!receiverId || !content) {
       return NextResponse.json(
@@ -27,11 +27,19 @@ export async function POST(request: NextRequest) {
         senderId: session.user.id,
         receiverId,
         content,
-        mediaUrl,
-        mediaType,
+        image,
+        document,
       },
       include: {
         sender: {
+          select: {
+            id: true,
+            username: true,
+            fullName: true,
+            avatar: true,
+          },
+        },
+        receiver: {
           select: {
             id: true,
             username: true,

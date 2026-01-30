@@ -17,19 +17,36 @@ export async function GET(request: NextRequest) {
 
       const pages = await prisma.page.findMany({
         where: {
-          ownerId: session.user.id,
-          isDeleted: false,
+          OR: [
+            { admins: { some: { userId: session.user.id } } },
+            { members: { some: { userId: session.user.id } } },
+          ],
         },
         include: {
-          owner: {
-            select: {
-              id: true,
-              username: true,
-              fullName: true,
-              avatar: true,
+          admins: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  fullName: true,
+                  avatar: true,
+                },
+              },
             },
           },
-          followers: true,
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  fullName: true,
+                  avatar: true,
+                },
+              },
+            },
+          },
         },
         orderBy: {
           createdAt: 'desc',
@@ -39,22 +56,33 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(pages);
     }
 
-    // Get discover pages
+    // Get discover pages (public listing)
     const pages = await prisma.page.findMany({
-      where: {
-        isDeleted: false,
-        isPublic: true,
-      },
       include: {
-        owner: {
-          select: {
-            id: true,
-            username: true,
-            fullName: true,
-            avatar: true,
+        admins: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                fullName: true,
+                avatar: true,
+              },
+            },
           },
         },
-        followers: true,
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                fullName: true,
+                avatar: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -97,17 +125,25 @@ export async function POST(request: NextRequest) {
         description,
         category,
         coverImage,
-        avatar,
-        ownerId: session.user.id,
-        isPublic: true,
+        image: avatar ?? null,
+        admins: {
+          create: {
+            userId: session.user.id,
+            role: 'admin',
+          },
+        },
       },
       include: {
-        owner: {
-          select: {
-            id: true,
-            username: true,
-            fullName: true,
-            avatar: true,
+        admins: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                fullName: true,
+                avatar: true,
+              },
+            },
           },
         },
       },

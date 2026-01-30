@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/Card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,18 +46,44 @@ export default function LoginPage() {
   };
 
   const handleGoogleSignIn = async () => {
+    setLoading(true);
     try {
-      await signIn('google', { callbackUrl: '/' });
+      const result = await signIn('google', { 
+        callbackUrl: '/',
+        redirect: false,
+      });
+      
+      if (result?.error) {
+        setError('Google sign-in failed: ' + result.error);
+      } else if (result?.ok) {
+        router.push('/');
+      }
     } catch (error) {
-      setError(translation.common.error);
+      console.error('Google sign-in error:', error);
+      setError('An error occurred during Google sign-in. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleFacebookSignIn = async () => {
+    setLoading(true);
     try {
-      await signIn('facebook', { callbackUrl: '/' });
+      const result = await signIn('facebook', { 
+        callbackUrl: '/',
+        redirect: false,
+      });
+      
+      if (result?.error) {
+        setError('Facebook sign-in failed: ' + result.error);
+      } else if (result?.ok) {
+        router.push('/');
+      }
     } catch (error) {
-      setError(translation.common.error);
+      console.error('Facebook sign-in error:', error);
+      setError('An error occurred during Facebook sign-in. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -105,12 +133,25 @@ export default function LoginPage() {
               />
 
               <Input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 label={translation.auth.password}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
+                rightElement={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-gray-500 hover:text-primary-dark transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                }
               />
 
               <div className="flex items-center justify-between">
@@ -146,6 +187,7 @@ export default function LoginPage() {
                 variant="outline"
                 className="w-full"
                 onClick={handleGoogleSignIn}
+                disabled={loading}
               >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                   <path
@@ -173,6 +215,7 @@ export default function LoginPage() {
                 variant="outline"
                 className="w-full"
                 onClick={handleFacebookSignIn}
+                disabled={loading}
               >
                 <svg className="w-5 h-5 mr-2" fill="#1877F2" viewBox="0 0 24 24">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>

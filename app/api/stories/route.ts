@@ -48,20 +48,21 @@ export async function GET(request: NextRequest) {
             id: true,
             username: true,
             fullName: true,
-            avatar: true
+            avatar: true,
+            isVerified: true
           }
         },
         views: {
-          where: {
-            userId: userId
-          },
-          select: {
-            id: true
+          include: {
+            user: {
+              select: {
+                username: true
+              }
+            }
           }
         },
         reactions: {
-          select: {
-            emoji: true,
+          include: {
             user: {
               select: {
                 username: true
@@ -97,10 +98,15 @@ export async function GET(request: NextRequest) {
         text: story.text,
         createdAt: story.createdAt,
         expiresAt: story.expiresAt,
-        isViewed: story.views.length > 0,
+        isViewed: story.views.some(v => v.userId === userId),
         viewCount: story._count.views,
         reactionCount: story._count.reactions,
-        reactions: story.reactions
+        reactions: story.reactions.map(r => ({
+          emoji: r.emoji,
+          user: {
+            username: r.user.username
+          }
+        }))
       });
       return acc;
     }, {} as Record<string, any>);

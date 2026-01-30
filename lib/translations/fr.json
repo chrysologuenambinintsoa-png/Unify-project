@@ -30,7 +30,10 @@
     "hasAccount": "Déjà un compte ?",
     "createAccount": "Créer un compte",
     "signIn": "Se connecter",
-    "signUp": "S'inscrire"
+    "signUp": "S'inscrire",
+    "confirmPassword": "Confirmer le mot de passe",
+    "show": "Afficher",
+    "hide": "Masquer"
   },
   "nav": {
     "home": "Accueil",
@@ -150,5 +153,24 @@
     "privacy": "Politique de confidentialité",
     "terms": "Conditions d'utilisation",
     "contact": "Contact"
+  },
+  "welcomePage": {
+    "connectWorld": "Connectez-vous au monde",
+    "connectWorldDesc": "Rejoignez une communauté mondiale et partagez vos moments",
+    "findFriends": "Trouvez vos amis",
+    "findFriendsDesc": "Retrouvez vos amis et faites de nouvelles rencontres",
+    "chatRealtime": "Discutez en temps réel",
+    "chatRealtimeDesc": "Échangez instantanément avec vos contacts",
+    "shareStories": "Partagez vos stories",
+    "shareStoriesDesc": "Créez des stories éphémères et captivantes",
+    "dataProtected": "Vos données protégées",
+    "dataProtectedDesc": "Votre vie privée est notre priorité absolue",
+    "fastExperience": "Expérience rapide",
+    "fastExperienceDesc": "Une interface moderne et performante",
+    "login": "Connexion",
+    "register": "Créer un compte",
+    "nextSlide": "Suivant",
+    "prevSlide": "Précédent",
+    "skipIntro": "Passer"
   }
 }

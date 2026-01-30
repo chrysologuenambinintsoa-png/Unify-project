@@ -1,17 +1,57 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
-import { Settings, User, Bell, Shield, Palette, Globe } from 'lucide-react';
+import { Settings, User, Bell, Shield, Palette, Globe, Loader2, CheckCircle } from 'lucide-react';
 import { AvatarUpload } from '@/components/AvatarUpload';
 import { useSession } from 'next-auth/react';
 
 export default function SettingsPage() {
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
   const { translation, language, setLanguage } = useLanguage();
   const [activeTab, setActiveTab] = useState<'general' | 'privacy' | 'notifications' | 'appearance'>('general');
+  const [loading, setLoading] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: '',
+    bio: '',
+    coverImage: '',
+  });
+  const [privacySettings, setPrivacySettings] = useState({
+    allowMessages: 'everyone',
+    showOnlineStatus: true,
+  });
+  const [notificationSettings, setNotificationSettings] = useState({
+    pushNotifications: true,
+    likes: true,
+    comments: true,
+    followers: true,
+  });
+
+  // Fetch user profile on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch('/api/users/profile');
+        if (response.ok) {
+          const data = await response.json();
+          setFormData({
+            fullName: data.fullName || '',
+            bio: data.bio || '',
+            coverImage: data.coverImage || '',
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+
+    if (session?.user?.id) {
+      fetchProfile();
+    }
+  }, [session?.user?.id]);
 
   const tabs = [
     { key: 'general', icon: User, label: translation.settings.general },
@@ -28,6 +68,57 @@ export default function SettingsPage() {
     { code: 'mg', name: 'Malagasy', flag: '🇲🇬' },
     { code: 'ch', name: '中文', flag: '🇨🇳' },
   ];
+
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handlePrivacyChange = (field: string, value: any) => {
+    setPrivacySettings(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleNotificationChange = (field: string, value: any) => {
+    setNotificationSettings(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      setLoading(true);
+      setSaveSuccess(false);
+
+      const response = await fetch('/api/users/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        const updatedUser = await response.json();
+        await updateSession({
+          ...session,
+          user: {
+            ...session?.user,
+            ...updatedUser,
+          },
+        });
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+      } else {
+        alert('Erreur lors de la sauvegarde');
+      }
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      alert('Erreur lors de la sauvegarde');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAvatarChange = (newAvatar: string | null) => {
+    // Avatar is already updated via session in AvatarUpload component
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 3000);
+  };
 
   return (
     <MainLayout>
@@ -91,6 +182,7 @@ export default function SettingsPage() {
                     <div className="flex justify-center">
                       <AvatarUpload
                         currentAvatar={session?.user?.avatar}
+                        onAvatarChange={handleAvatarChange}
                         size="xl"
                       />
                     </div>
@@ -116,22 +208,12 @@ export default function SettingsPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Nom d'utilisateur
+                        Nom complet
                       </label>
                       <input
                         type="text"
-                        defaultValue="john_doe"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        defaultValue="john@example.com"
+                        value={formData.fullName}
+                        onChange={(e) => handleInputChange('fullName', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       />
                     </div>
@@ -142,16 +224,39 @@ export default function SettingsPage() {
                       </label>
                       <textarea
                         rows={3}
-                        defaultValue="Software developer | Tech enthusiast"
+                        value={formData.bio}
+                        onChange={(e) => handleInputChange('bio', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       />
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-gray-200">
-                    <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-light transition-colors">
-                      Enregistrer les modifications
+                  <div className="pt-4 border-t border-gray-200 flex items-center gap-3">
+                    <button
+                      onClick={handleSaveProfile}
+                      disabled={loading}
+                      className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Enregistrement...
+                        </>
+                      ) : (
+                        'Enregistrer les modifications'
+                      )}
                     </button>
+                    {saveSuccess && (
+                      <motion.div
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 10 }}
+                        className="flex items-center gap-2 text-green-600"
+                      >
+                        <CheckCircle className="w-5 h-5" />
+                        <span className="text-sm">Modifications enregistrées</span>
+                      </motion.div>
+                    )}
                   </div>
                 </motion.div>
               )}
@@ -177,7 +282,12 @@ export default function SettingsPage() {
                         </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" />
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={privacySettings.allowMessages === 'friends'}
+                          onChange={(e) => handlePrivacyChange('allowMessages', e.target.checked ? 'friends' : 'everyone')}
+                        />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                       </label>
                     </div>
@@ -191,10 +301,14 @@ export default function SettingsPage() {
                           Contrôler qui peut vous envoyer des messages
                         </p>
                       </div>
-                      <select className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                        <option>Tous les utilisateurs</option>
-                        <option>Amis uniquement</option>
-                        <option>Personne</option>
+                      <select
+                        value={privacySettings.allowMessages}
+                        onChange={(e) => handlePrivacyChange('allowMessages', e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      >
+                        <option value="everyone">Tous les utilisateurs</option>
+                        <option value="friends">Amis uniquement</option>
+                        <option value="none">Personne</option>
                       </select>
                     </div>
 
@@ -208,7 +322,12 @@ export default function SettingsPage() {
                         </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" defaultChecked />
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={privacySettings.showOnlineStatus}
+                          onChange={(e) => handlePrivacyChange('showOnlineStatus', e.target.checked)}
+                        />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                       </label>
                     </div>
@@ -237,7 +356,12 @@ export default function SettingsPage() {
                         </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" defaultChecked />
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={notificationSettings.pushNotifications}
+                          onChange={(e) => handleNotificationChange('pushNotifications', e.target.checked)}
+                        />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                       </label>
                     </div>
@@ -252,7 +376,12 @@ export default function SettingsPage() {
                         </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" defaultChecked />
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={notificationSettings.likes}
+                          onChange={(e) => handleNotificationChange('likes', e.target.checked)}
+                        />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                       </label>
                     </div>
@@ -267,7 +396,12 @@ export default function SettingsPage() {
                         </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" defaultChecked />
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={notificationSettings.comments}
+                          onChange={(e) => handleNotificationChange('comments', e.target.checked)}
+                        />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                       </label>
                     </div>
@@ -282,7 +416,12 @@ export default function SettingsPage() {
                         </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" defaultChecked />
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={notificationSettings.followers}
+                          onChange={(e) => handleNotificationChange('followers', e.target.checked)}
+                        />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                       </label>
                     </div>

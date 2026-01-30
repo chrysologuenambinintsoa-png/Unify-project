@@ -2,33 +2,41 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 
-// GET /api/search - Search users, posts, and pages
+// GET /api/search - Search personnes, groupes, and pages
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || '';
     const type = searchParams.get('type') || 'all';
+    const session = await getServerSession(authOptions);
 
     if (!query || query.length < 2) {
       return NextResponse.json({
-        users: [],
-        posts: [],
+        personnes: [],
+        groupes: [],
         pages: [],
       });
     }
 
-    const searchQuery = {
+    const searchQuery: Prisma.UserWhereInput = {
       OR: [
-        { username: { contains: query, mode: 'insensitive' } },
-        { fullName: { contains: query, mode: 'insensitive' } },
+        { username: { contains: query, mode: Prisma.QueryMode.insensitive } },
+        { fullName: { contains: query, mode: Prisma.QueryMode.insensitive } },
       ],
     };
 
-    let results: any = {};
+    let results: any = {
+      personnes: [],
+      groupes: [],
+      pages: [],
+    };
 
-    if (type === 'all' || type === 'users') {
-      results.users = await prisma.user.findMany({
+    // Search personnes (users and friends)
+    if (type === 'all' || type === 'personnes') {
+      // First get all users matching the search
+      const users = await prisma.user.findMany({
         where: searchQuery,
         select: {
           id: true,
@@ -39,51 +47,104 @@ export async function GET(request: NextRequest) {
         },
         take: 10,
       });
+
+      // If user is logged in, check friendship status
+      if (session?.user?.id) {
+        const usersWithFriendship = await Promise.all(
+          users.map(async (user) => {
+            if (user.id === session.user.id) {
+              return { ...user, friendshipStatus: 'self' };
+            }
+
+            const friendship = await prisma.friendship.findFirst({
+              where: {
+                OR: [
+                  { user1Id: session.user.id, user2Id: user.id },
+                  { user1Id: user.id, user2Id: session.user.id },
+                ],
+              },
+              select: { status: true },
+            });
+
+            return {
+              ...user,
+              friendshipStatus: friendship?.status || 'none',
+            };
+          })
+        );
+        results.personnes = usersWithFriendship;
+      } else {
+        results.personnes = users;
+      }
     }
 
-    if (type === 'all' || type === 'posts') {
-      results.posts = await prisma.post.findMany({
-        where: {
-          OR: [
-            { content: { contains: query, mode: 'insensitive' } },
-          ],
-          isDeleted: false,
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              fullName: true,
-              avatar: true,
-            },
+    // Search groupes
+    if (type === 'all' || type === 'groupes') {
+      const groupeQuery: Prisma.GroupWhereInput = {
+        OR: [
+          { name: { contains: query, mode: Prisma.QueryMode.insensitive } },
+          { description: { contains: query, mode: Prisma.QueryMode.insensitive } },
+        ],
+        isPrivate: false, // Only search public groups
+      };
+
+      const groups = await prisma.group.findMany({
+        where: groupeQuery,
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          image: true,
+          adminId: true,
+          isPrivate: true,
+          members: {
+            where: { userId: session?.user?.id },
+            select: { userId: true },
           },
         },
         take: 10,
       });
+
+      results.groupes = groups.map((group) => {
+        const { members, ...rest } = group;
+        return {
+          ...rest,
+          isMember: members.length > 0,
+        };
+      });
     }
 
+    // Search pages
     if (type === 'all' || type === 'pages') {
-      results.pages = await prisma.page.findMany({
+      const pages = await prisma.page.findMany({
         where: {
           OR: [
-            { name: { contains: query, mode: 'insensitive' } },
-            { description: { contains: query, mode: 'insensitive' } },
+            { name: { contains: query, mode: Prisma.QueryMode.insensitive } },
+            { description: { contains: query, mode: Prisma.QueryMode.insensitive } },
           ],
-          isDeleted: false,
-          isPublic: true,
         },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              username: true,
-              fullName: true,
-              avatar: true,
-            },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          image: true,
+          coverImage: true,
+          category: true,
+          isVerified: true,
+          members: {
+            where: { userId: session?.user?.id },
+            select: { userId: true },
           },
         },
         take: 10,
+      });
+
+      results.pages = pages.map((page) => {
+        const { members, ...rest } = page;
+        return {
+          ...rest,
+          isFollowing: members.length > 0,
+        };
       });
     }
 

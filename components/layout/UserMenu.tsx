@@ -78,18 +78,21 @@ export function UserMenu() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+            className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-xl z-[9999]"
+            style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
           >
             {/* User Info Header */}
             <div className="px-4 py-3 border-b border-gray-100">
               <p className="text-sm font-semibold text-gray-900">
                 {session.user.fullName || session.user.username}
               </p>
-              <p className="text-xs text-gray-500">{session.user.email}</p>
+              {session.user.email && (
+                <p className="text-xs text-gray-500 truncate">{session.user.email}</p>
+              )}
             </div>
 
             {/* Menu Items */}

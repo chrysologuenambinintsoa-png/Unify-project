@@ -22,11 +22,7 @@ export async function GET(request: NextRequest) {
         bio: true,
         avatar: true,
         coverImage: true,
-        location: true,
-        website: true,
-        dateOfBirth: true,
         isVerified: true,
-        isPrivate: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -62,10 +58,6 @@ export async function PATCH(request: NextRequest) {
     const {
       fullName,
       bio,
-      location,
-      website,
-      dateOfBirth,
-      isPrivate,
       coverImage,
     } = body;
 
@@ -74,10 +66,6 @@ export async function PATCH(request: NextRequest) {
       data: {
         fullName,
         bio,
-        location,
-        website,
-        dateOfBirth,
-        isPrivate,
         coverImage,
       },
       select: {
@@ -88,10 +76,9 @@ export async function PATCH(request: NextRequest) {
         bio: true,
         avatar: true,
         coverImage: true,
-        location: true,
-        website: true,
         isVerified: true,
-        isPrivate: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 

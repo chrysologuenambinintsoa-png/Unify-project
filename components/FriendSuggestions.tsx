@@ -34,8 +34,13 @@ export function FriendSuggestions({ compact = false }: FriendSuggestionsProps) {
   const fetchSuggestions = async () => {
     try {
       setLoading(true);
-      // TODO: Fetch from API
-      setSuggestions([]);
+      const res = await fetch('/api/friends/suggestions');
+      if (!res.ok) {
+        throw new Error('Failed to fetch friend suggestions');
+      }
+      const data = await res.json();
+      // API returns { suggestions: [...] }
+      setSuggestions(data?.suggestions ?? []);
     } catch (error) {
       console.error('Error fetching suggestions:', error);
     } finally {
@@ -76,12 +81,8 @@ export function FriendSuggestions({ compact = false }: FriendSuggestionsProps) {
   }
 
   if (suggestions.length === 0) {
-    return (
-      <div className="bg-white rounded-2xl p-6 shadow-lg">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Suggestions d'amis</h3>
-        <p className="text-gray-500 text-center py-8">Aucune suggestion disponible</p>
-      </div>
-    );
+    // No suggestions -> do not render the card
+    return null;
   }
 
   return (

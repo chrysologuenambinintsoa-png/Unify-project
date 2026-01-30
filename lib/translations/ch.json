@@ -30,7 +30,10 @@
     "hasAccount": "已有账号？",
     "createAccount": "创建账号",
     "signIn": "登录",
-    "signUp": "注册"
+    "signUp": "注册",
+    "confirmPassword": "确认密码",
+    "show": "显示",
+    "hide": "隐藏"
   },
   "nav": {
     "home": "首页",
@@ -149,6 +152,23 @@
     "about": "关于",
     "privacy": "隐私政策",
     "terms": "服务条款",
-    "contact": "联系"
-  }
+    "contact": "联系"  },
+  "welcomePage": {
+    "connectWorld": "连接到世界",
+    "connectWorldDesc": "加入全球社区并分享您的时刻",
+    "findFriends": "找到你的朋友",
+    "findFriendsDesc": "重新联系你的朋友并结识新朋友",
+    "chatRealtime": "实时聊天",
+    "chatRealtimeDesc": "与您的联系人即时交换",
+    "shareStories": "分享你的故事",
+    "shareStoriesDesc": "创建短暂而迷人的故事",
+    "dataProtected": "您的数据受保护",
+    "dataProtectedDesc": "您的隐私是我们的绝对优先事项",
+    "fastExperience": "快速体验",
+    "fastExperienceDesc": "现代和高性能的界面",
+    "login": "登录",
+    "register": "创建账号",
+    "nextSlide": "下一步",
+    "prevSlide": "上一步",
+    "skipIntro": "跳过"  }
 }

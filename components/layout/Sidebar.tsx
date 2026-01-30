@@ -6,7 +6,10 @@ import { usePathname } from 'next/navigation';
 import { Home, Search, Bell, Mail, Users, Settings, LogOut, Users2, Flag } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useBadges } from '@/hooks/useBadges';
+import { SidebarBadge } from '@/components/SidebarBadge';
+import { SidebarUser } from '@/components/layout/SidebarUser';
 
 const navItems = [
   { href: '/', icon: Home, labelKey: 'nav.home' },
@@ -26,6 +29,7 @@ interface SidebarProps {
 export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
   const { translation } = useLanguage();
+  const { badges } = useBadges();
 
   const getTranslation = (key: string) => {
     const keys = key.split('.');
@@ -44,6 +48,13 @@ export function Sidebar({ onClose }: SidebarProps) {
           const isActive = pathname === item.href;
           const label = getTranslation(item.labelKey);
 
+          // Déterminer le badge à afficher selon la route
+          let badgeCount = 0;
+          if (item.href === '/notifications') badgeCount = badges.notifications;
+          else if (item.href === '/messages') badgeCount = badges.messages;
+          else if (item.href === '/friends') badgeCount = badges.friends;
+          else if (item.href === '/groups') badgeCount = badges.groups;
+
           return (
             <motion.div
               key={item.href}
@@ -55,7 +66,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                 href={item.href}
                 onClick={onClose}
                 className={cn(
-                  'flex items-center space-x-3 px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all duration-200 text-sm sm:text-base',
+                  'relative flex items-center space-x-3 px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all duration-200 text-sm sm:text-base',
                   'hover:bg-primary-light',
                   isActive
                     ? 'bg-accent-dark text-white shadow-lg'
@@ -64,6 +75,24 @@ export function Sidebar({ onClose }: SidebarProps) {
               >
                 <Icon className={cn('w-5 sm:w-6 h-5 sm:h-6 flex-shrink-0', isActive && 'scale-110')} />
                 <span className="font-medium">{label}</span>
+                
+                {/* Badge */}
+                <AnimatePresence>
+                  {badgeCount > 0 && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0 }}
+                      className="ml-auto"
+                    >
+                      <SidebarBadge
+                        count={badgeCount}
+                        variant={badgeCount > 0 ? 'error' : 'default'}
+                        size="sm"
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </Link>
             </motion.div>
           );
@@ -85,16 +114,8 @@ export function Sidebar({ onClose }: SidebarProps) {
         </motion.div>
       </nav>
 
-      {/* Bottom Section */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 border-t border-blue-800">
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-accent-dark text-white rounded-lg sm:rounded-xl font-medium text-sm sm:text-base hover:bg-accent-light transition-colors shadow-lg"
-        >
-          {translation.post.createPost}
-        </motion.button>
-      </div>
+      {/* User Section */}
+      <SidebarUser />
     </aside>
   );
 }

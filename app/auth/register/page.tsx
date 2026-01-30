@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/Card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -22,6 +23,8 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -149,23 +152,49 @@ export default function RegisterPage() {
               />
 
               <Input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 name="password"
                 label={translation.auth.password}
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="••••••••"
                 required
+                rightElement={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-gray-500 hover:text-primary-dark transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                }
               />
 
               <Input
-                type="password"
+                type={showConfirmPassword ? 'text' : 'password'}
                 name="confirmPassword"
-                label="Confirmer le mot de passe"
+                label={translation.auth.confirmPassword}
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="••••••••"
                 required
+                rightElement={
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="text-gray-500 hover:text-primary-dark transition-colors"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                }
               />
 
               <Button

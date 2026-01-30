@@ -29,12 +29,12 @@ export async function POST(
     }
 
     // Create a shared post
-    const sharedPost = await prisma.post.create({
+    const sharedPost = await (prisma.post.create({
       data: {
         content: `${session.user.username} shared a post`,
         userId: session.user.id,
         sharedPostId: postId,
-      },
+      } as any,
       include: {
         user: {
           select: {
@@ -56,8 +56,8 @@ export async function POST(
             },
           },
         },
-      },
-    });
+      } as any,
+    }) as any);
 
     return NextResponse.json(sharedPost, { status: 201 });
   } catch (error) {

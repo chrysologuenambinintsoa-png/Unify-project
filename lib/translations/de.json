@@ -30,7 +30,10 @@
     "hasAccount": "Haben Sie bereits ein Konto?",
     "createAccount": "Konto erstellen",
     "signIn": "Anmelden",
-    "signUp": "Registrieren"
+    "signUp": "Registrieren",
+    "confirmPassword": "Passwort bestätigen",
+    "show": "Anzeigen",
+    "hide": "Ausblenden"
   },
   "nav": {
     "home": "Startseite",
@@ -150,5 +153,24 @@
     "privacy": "Datenschutzerklärung",
     "terms": "Nutzungsbedingungen",
     "contact": "Kontakt"
+  },
+  "welcomePage": {
+    "connectWorld": "Verbinde dich mit der Welt",
+    "connectWorldDesc": "Treten Sie einer globalen Gemeinschaft bei und teilen Sie Ihre Momente",
+    "findFriends": "Finde deine Freunde",
+    "findFriendsDesc": "Verbinde dich wieder mit deinen Freunden und knüpfe neue Kontakte",
+    "chatRealtime": "Chatten Sie in Echtzeit",
+    "chatRealtimeDesc": "Tauschen Sie sich sofort mit Ihren Kontakten aus",
+    "shareStories": "Teile deine Geschichten",
+    "shareStoriesDesc": "Erstellen Sie vergängliche und fesselnde Geschichten",
+    "dataProtected": "Ihre Daten sind geschützt",
+    "dataProtectedDesc": "Ihre Privatsphäre ist unsere absolute Priorität",
+    "fastExperience": "Schnelle Erfahrung",
+    "fastExperienceDesc": "Eine moderne und leistungsstarke Benutzeroberfläche",
+    "login": "Anmelden",
+    "register": "Konto erstellen",
+    "nextSlide": "Weiter",
+    "prevSlide": "Zurück",
+    "skipIntro": "Überspringen"
   }
 }

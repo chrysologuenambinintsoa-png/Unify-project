@@ -4,10 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { CreatePost } from '@/components/post/CreatePost';
-import { CreateStory } from '@/components/CreateStory';
-import { Stories } from '@/components/Stories';
-import { Post } from '@/components/post/Post';
+import PostCreator from '@/components/post/PostCreator';
+import Stories from '@/components/Stories';
+import Post from '@/components/Post';
 import { FriendSuggestions } from '@/components/FriendSuggestions';
 import { PageSuggestions } from '@/components/PageSuggestions';
 import { GroupSuggestions } from '@/components/GroupSuggestions';
@@ -30,23 +29,12 @@ export default function HomePage() {
     }
   }, [status, router]);
 
-  // Afficher un écran de chargement pendant la vérification de la session
-  if (status === 'loading') {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  // Ne pas afficher le contenu si l'utilisateur n'est pas authentifié
-  if (!session) {
-    return null;
-  }
-
+  // Charger les posts
   useEffect(() => {
-    fetchPosts();
-  }, []);
+    if (session) {
+      fetchPosts();
+    }
+  }, [session]);
 
   const fetchPosts = async () => {
     try {
@@ -63,6 +51,20 @@ export default function HomePage() {
       setLoading(false);
     }
   };
+
+  // Afficher un écran de chargement pendant la vérification de la session
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Ne pas afficher le contenu si l'utilisateur n'est pas authentifié
+  if (!session) {
+    return null;
+  }
   const handleLike = async (postId: string) => {
     try {
       const response = await fetch(`/api/posts/${postId}/likes`, {
@@ -91,6 +93,45 @@ export default function HomePage() {
     }
   };
 
+  const handleCreatePost = async (newPost: any) => {
+    try {
+      const media = [];
+      
+      // Ajouter les images (ce sont maintenant des URLs)
+      if (newPost.images && newPost.images.length > 0) {
+        newPost.images.forEach((url: string) => {
+          media.push({ type: 'image', url });
+        });
+      }
+      
+      // Ajouter les vidéos (ce sont maintenant des URLs)
+      if (newPost.videos && newPost.videos.length > 0) {
+        newPost.videos.forEach((url: string) => {
+          media.push({ type: 'video', url });
+        });
+      }
+
+      const response = await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: newPost.content,
+          media: media.length > 0 ? media : undefined,
+        }),
+      });
+      if (response.ok) {
+        await fetchPosts();
+      } else {
+        const error = await response.json();
+        console.error('Erreur lors de la création du post:', error);
+      }
+    } catch (err) {
+      console.error('Erreur lors de la création du post:', err);
+    }
+  };
+
   return (
     <MainLayout>
       <motion.div
@@ -105,12 +146,15 @@ export default function HomePage() {
               {translation.nav.home}
             </h1>
 
-            <CreatePost />
+            <PostCreator onCreatePost={handleCreatePost} />
 
-            <CreateStory />
-
-            <Stories />
-
+            {/* Stories Section */}
+            <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-md p-6">
+              <div className="mb-6">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Stories</h2>
+              </div>
+              <Stories stories={[]} currentUser={session?.user as any} />
+            </div>
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>

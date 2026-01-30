@@ -3,8 +3,9 @@
 import React from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { Search, Bell, Mail, Settings, Menu } from 'lucide-react';
+import { Bell, Mail, Settings, Menu } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
+import { SearchBar } from '@/components/SearchBar';
 import { UserMenu } from '@/components/layout/UserMenu';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useUnreadCounts } from '@/hooks/useUnreadCounts';
@@ -20,9 +21,9 @@ export function Header({ onMenuClick }: HeaderProps) {
   const { counts } = useUnreadCounts();
 
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-2 sm:gap-4">
+    <header className="sticky top-0 z-[10000] bg-white border-b border-gray-200 shadow-sm overflow-visible">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 overflow-visible">
+        <div className="flex items-center justify-between h-16 gap-2 sm:gap-4 overflow-visible">
           {/* Menu Button - Mobile Only */}
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -47,15 +48,8 @@ export function Header({ onMenuClick }: HeaderProps) {
           </Link>
 
           {/* Search Bar - Hidden on small mobile */}
-          <div className="hidden sm:block flex-1 max-w-xs md:max-w-md lg:max-w-md mx-2 lg:mx-8">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 sm:w-5 h-4 sm:h-5" />
-              <input
-                type="text"
-                placeholder={`${translation.nav.home}...`}
-                className="w-full pl-10 pr-4 py-2 text-sm bg-gray-100 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-dark focus:border-transparent"
-              />
-            </div>
+          <div className="hidden sm:block">
+            <SearchBar />
           </div>
 
           {/* Navigation Icons */}
@@ -95,7 +89,9 @@ export function Header({ onMenuClick }: HeaderProps) {
             </nav>
 
             {/* User Menu */}
-            <UserMenu />
+            <div className="relative">
+              <UserMenu />
+            </div>
           </div>
         </div>
       </div>

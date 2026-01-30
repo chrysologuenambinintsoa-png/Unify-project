@@ -100,7 +100,18 @@ export async function PATCH(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ success: true });
+    // Return updated unread count
+    const unreadCount = await prisma.notification.count({
+      where: {
+        userId: session.user.id,
+        isRead: false,
+      },
+    });
+
+    return NextResponse.json({ 
+      success: true,
+      unreadCount 
+    });
   } catch (error) {
     console.error('Error updating notifications:', error);
     return NextResponse.json(

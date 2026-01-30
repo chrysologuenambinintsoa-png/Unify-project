@@ -181,3 +181,59 @@ export interface NotificationCounter {
   friends: number;
   notifications: number;
 }
+
+// ==================== FRIENDS API TYPES ====================
+
+export interface FriendBadges {
+  pendingRequests: number;
+  suggestions: number;
+  friends: number;
+  total: number;
+}
+
+export interface FriendRequest {
+  id: string;
+  fromUser: ExtendedUser;
+  createdAt: string;
+}
+
+export interface FriendRequestsResponse {
+  requests: FriendRequest[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface FriendSuggestion extends ExtendedUser {
+  mutualFriendsCount: number;
+}
+
+export interface FriendSuggestionsResponse {
+  suggestions: FriendSuggestion[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface Friend extends ExtendedUser {
+  friendSince: string;
+}
+
+export interface FriendsListResponse {
+  friends: Friend[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface FriendHookOptions {
+  refetchInterval?: number;
+  enabled?: boolean;
+}
+
+export interface FriendHookReturn<T> {
+  data: T;
+  loading: boolean;
+  error: string | null;
+  refetch: (limit?: number, offset?: number, search?: string) => Promise<void>;
+}

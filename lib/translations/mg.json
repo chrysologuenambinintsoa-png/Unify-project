@@ -30,7 +30,10 @@
     "hasAccount": "Efa misy kaonty ?",
     "createAccount": "Hamorona kaonty",
     "signIn": "Hiditra",
-    "signUp": "Horonana"
+    "signUp": "Horonana",
+    "confirmPassword": "Porofoo ny teny miafina",
+    "show": "Asehoy",
+    "hide": "Akela"
   },
   "nav": {
     "home": "Fandraisana",
@@ -150,5 +153,24 @@
     "privacy": "Fiarovana ny data",
     "terms": "Fepetra fampiasana",
     "contact": "Fifandraisana"
+  },
+  "welcomePage": {
+    "connectWorld": "Mifandray amin'ny mundo",
+    "connectWorldDesc": "Joini ny komunidad maneran-tany ary ampitao ny iyong fotoana",
+    "findFriends": "Tadiaviny ny namanao",
+    "findFriendsDesc": "Mifandray amin'ny namanao ary makahita vaovao",
+    "chatRealtime": "Schat ao am-potoana miverina",
+    "chatRealtimeDesc": "Famantarana miaraka amin'ny iyong mpifandraisan-dalana",
+    "shareStories": "Ampitao ny iyong istoria",
+    "shareStoriesDesc": "Lumikha ng mga istoriyang mahiwagang at nakakaakit",
+    "dataProtected": "Arogain amin'ny iyong angona",
+    "dataProtectedDesc": "Ang iyong privacy ay aming pangunahing priyoridad",
+    "fastExperience": "Karanasang mabilis",
+    "fastExperienceDesc": "Isang makabagong at mataas na performance na interface",
+    "login": "Hiditra",
+    "register": "Lumikha ng kaonty",
+    "nextSlide": "Manaraka",
+    "prevSlide": "Taloha",
+    "skipIntro": "Lampasan"
   }
 }

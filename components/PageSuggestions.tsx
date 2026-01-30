@@ -35,10 +35,33 @@ export function PageSuggestions({ compact = false }: PageSuggestionsProps) {
   const fetchPages = async () => {
     try {
       setLoading(true);
-      // TODO: Fetch from API
-      setPages([]);
+      let res: Response | null = null;
+      try {
+        res = await fetch('/api/pages?type=discover');
+      } catch (networkErr) {
+        console.debug('Network error fetching pages:', networkErr);
+        setPages([]);
+        return;
+      }
+
+      if (!res || !res.ok) {
+        let errBody: any = null;
+        try { errBody = await res?.json(); } catch (_) { try { errBody = await res?.text(); } catch {} }
+        console.debug('Failed to fetch pages', res?.status, errBody);
+        setPages([]);
+        return;
+      }
+
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setPages(data);
+      } else if (Array.isArray((data as any).pages)) {
+        setPages((data as any).pages);
+      } else {
+        setPages([]);
+      }
     } catch (error) {
-      console.error('Error fetching pages:', error);
+      console.debug('Error fetching pages:', error);
     } finally {
       setLoading(false);
     }
@@ -85,12 +108,8 @@ export function PageSuggestions({ compact = false }: PageSuggestionsProps) {
   }
 
   if (pages.length === 0) {
-    return (
-      <div className="bg-white rounded-2xl p-6 shadow-lg">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Pages suggérées</h3>
-        <p className="text-gray-500 text-center py-8">Aucune page suggérée</p>
-      </div>
-    );
+    // No pages -> do not render
+    return null;
   }
 
   return (

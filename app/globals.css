@@ -111,6 +111,20 @@ body {
   animation: scaleIn 0.2s ease-out;
 }
 
+/* Progress bar animation used by Stories modal */
+@keyframes progress {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+/* Fallback utility if needed */
+.animate-progress {
+  animation: progress 5s linear forwards;
+}
 /* Utility classes */
 .no-scrollbar {
   -ms-overflow-style: none;

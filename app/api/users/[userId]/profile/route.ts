@@ -10,31 +10,58 @@ export async function GET(
 ) {
   try {
     const { userId } = await context.params;
+    const session = await getServerSession(authOptions);
 
-    const user = await prisma.user.findUnique({
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Fetch user profile with new fields
+    const user = await (prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
         username: true,
         fullName: true,
-        bio: true,
+        email: true,
         avatar: true,
+        bio: true,
         coverImage: true,
-        location: true,
-        website: true,
         isVerified: true,
-        isPrivate: true,
         createdAt: true,
+        // About section
+        dateOfBirth: true,
+        originCity: true,
+        currentCity: true,
+        schoolName: true,
+        collegeName: true,
+        highSchoolName: true,
+        universityName: true,
+        skills: true,
+        pseudonym: true,
+        // Photo gallery
+        photoGallery: {
+          select: {
+            id: true,
+            url: true,
+            type: true,
+            caption: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        },
         _count: {
           select: {
-            friends: true,
-            followers: true,
-            following: true,
             posts: true,
+            friends1: true,
+            friends2: true,
           },
         },
-      },
-    });
+      } as any,
+    }) as any);
 
     if (!user) {
       return NextResponse.json(
@@ -43,12 +70,158 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(user);
+    // Calculate friendship status
+    let friendshipStatus = 'none';
+
+    if (session?.user?.id === userId) {
+      friendshipStatus = 'self';
+    } else if (session?.user?.id) {
+      const friendship = await prisma.friendship.findFirst({
+        where: {
+          OR: [
+            { user1Id: session.user.id, user2Id: userId },
+            { user1Id: userId, user2Id: session.user.id },
+          ],
+        },
+        select: {
+          user1Id: true,
+          status: true,
+        },
+      });
+
+      if (friendship) {
+        if (friendship.status === 'accepted') {
+          friendshipStatus = 'accepted';
+        } else if (friendship.status === 'pending') {
+          // Check who sent the request
+          friendshipStatus = friendship.user1Id === session.user.id ? 'sent' : 'pending';
+        }
+      }
+    }
+
+    const friendsCount = (user._count.friends1 || 0) + (user._count.friends2 || 0);
+
+    // Parse skills if it's a JSON string
+    let parsedSkills = [];
+    if (user.skills) {
+      try {
+        parsedSkills = JSON.parse(user.skills);
+      } catch (e) {
+        parsedSkills = [user.skills];
+      }
+    }
+
+    return NextResponse.json({
+      user: {
+        id: user.id,
+        username: user.username,
+        fullName: user.fullName,
+        email: user.email,
+        avatar: user.avatar,
+        bio: user.bio,
+        coverImage: user.coverImage,
+        isVerified: user.isVerified,
+        createdAt: user.createdAt,
+        postsCount: user._count.posts || 0,
+        friendsCount,
+        // About section
+        about: {
+          dateOfBirth: user.dateOfBirth,
+          originCity: user.originCity,
+          currentCity: user.currentCity,
+          schoolName: user.schoolName,
+          collegeName: user.collegeName,
+          highSchoolName: user.highSchoolName,
+          universityName: user.universityName,
+          skills: parsedSkills,
+          pseudonym: user.pseudonym,
+        },
+        // Photo gallery
+        photoGallery: user.photoGallery,
+      },
+      friendshipStatus,
+    });
   } catch (error) {
     console.error('Error fetching user profile:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch profile' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
+
+// PUT /api/users/[userId]/profile - Update user profile
+export async function PUT(
+  request: NextRequest,
+  context: { params: Promise<{ userId: string }> }
+) {
+  try {
+    const { userId } = await context.params;
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id || session.user.id !== userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+
+    const updatedUser = await (prisma.user.update({
+      where: { id: userId },
+      data: {
+        fullName: body.fullName,
+        bio: body.bio,
+        pseudonym: body.pseudonym,
+        dateOfBirth: body.dateOfBirth ? new Date(body.dateOfBirth) : undefined,
+        originCity: body.originCity,
+        currentCity: body.currentCity,
+        schoolName: body.schoolName,
+        collegeName: body.collegeName,
+        highSchoolName: body.highSchoolName,
+        universityName: body.universityName,
+        skills: body.skills ? JSON.stringify(body.skills) : undefined,
+      } as any,
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
+        bio: true,
+        pseudonym: true,
+        dateOfBirth: true,
+        originCity: true,
+        currentCity: true,
+        schoolName: true,
+        collegeName: true,
+        highSchoolName: true,
+        universityName: true,
+        skills: true,
+      } as any,
+    }) as any);
+
+    // Parse skills
+    let parsedSkills = [];
+    if (updatedUser.skills) {
+      try {
+        parsedSkills = JSON.parse(updatedUser.skills);
+      } catch (e) {
+        parsedSkills = [updatedUser.skills];
+      }
+    }
+
+    return NextResponse.json({
+      user: {
+        ...updatedUser,
+        skills: parsedSkills,
+      },
+    });
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+

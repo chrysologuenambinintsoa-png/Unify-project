@@ -18,21 +18,10 @@ export async function GET(request: NextRequest) {
               userId: session.user.id,
             },
           },
-          isDeleted: false,
         },
         include: {
-          owner: {
-            select: {
-              id: true,
-              username: true,
-              fullName: true,
-              avatar: true,
-            },
-          },
           members: {
-            select: {
-              userId: true,
-              role: true,
+            include: {
               user: {
                 select: {
                   id: true,
@@ -52,24 +41,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(groups);
     }
 
-    // Get discover groups
+    // Get discover groups (public)
     const groups = await prisma.group.findMany({
       where: {
-        isDeleted: false,
-        isPublic: true,
+        isPrivate: false,
       },
       include: {
-        owner: {
-          select: {
-            id: true,
-            username: true,
-            fullName: true,
-            avatar: true,
-          },
-        },
         members: {
-          select: {
-            userId: true,
+          include: {
             user: {
               select: {
                 id: true,
@@ -120,10 +99,9 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         description,
-        coverImage,
-        avatar,
-        ownerId: session.user.id,
-        isPublic: true,
+        image: avatar ?? coverImage ?? null,
+        adminId: session.user.id,
+        isPrivate: false,
         members: {
           create: {
             userId: session.user.id,
@@ -132,17 +110,8 @@ export async function POST(request: NextRequest) {
         },
       },
       include: {
-        owner: {
-          select: {
-            id: true,
-            username: true,
-            fullName: true,
-            avatar: true,
-          },
-        },
         members: {
-          select: {
-            userId: true,
+          include: {
             user: {
               select: {
                 id: true,

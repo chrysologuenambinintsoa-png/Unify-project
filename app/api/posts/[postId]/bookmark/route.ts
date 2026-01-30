@@ -29,7 +29,7 @@ export async function POST(
     }
 
     // Check if already bookmarked
-    const existingBookmark = await prisma.bookmark.findFirst({
+    const existingBookmark = await (prisma as any).bookmark.findFirst({
       where: {
         userId: session.user.id,
         postId,
@@ -43,7 +43,7 @@ export async function POST(
       );
     }
 
-    const bookmark = await prisma.bookmark.create({
+    const bookmark = await (prisma as any).bookmark.create({
       data: {
         userId: session.user.id,
         postId,
@@ -74,7 +74,7 @@ export async function DELETE(
 
     const { postId } = await context.params;
 
-    await prisma.bookmark.deleteMany({
+    await (prisma as any).bookmark.deleteMany({
       where: {
         userId: session.user.id,
         postId,
